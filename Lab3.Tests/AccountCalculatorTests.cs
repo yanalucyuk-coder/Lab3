@@ -127,5 +127,68 @@ namespace Lab3.Tests
             Assert.ThrowsException<ArgumentNullException>(() => calculator.GetMaxBalance(null!));
         }
 
+        //тести лаби 4
+        [TestMethod]
+        public void GetTotalInterest_MixedInterestAccounts()
+        {
+            var calculator = new AccountCalculator();
+            var accounts = new List<IInterestBearing>
+            {
+                new DepositAccount(100.0, "UAH", 10.0), //100*0.1*6/12 = 5
+                new SavingAccount(200.0, "UAH", 5.0, 100.0) //200*0.05*6/12 = 5
+            };
+            Assert.AreEqual(10.0, calculator.GetTotalInterest(accounts, 6));
+        }
+
+        [TestMethod]
+        public void GetTotalInterest_EmptyList()
+        {
+            var calculator = new AccountCalculator();
+            Assert.AreEqual(0.0, calculator.GetTotalInterest(new List<IInterestBearing>(), 6), "Список є пустим!");
+        }
+
+        [TestMethod]
+        public void GetTotalInterest_Null()
+        {
+            var calculator = new AccountCalculator();
+            Assert.ThrowsException<ArgumentNullException>(() => calculator.GetTotalInterest(null!,6));
+        }
+
+        [TestMethod]
+        public void GetTotalDebt_OnlyNegativeBalancesCount()
+        {
+            var calculator = new AccountCalculator();
+            var accounts = new List<IRepayable>
+            {
+                new CreditAccount(-100.0, "UAH", 400.0),
+                new CreditAccount(-400.0, "UAH", 900.0),
+                new CreditAccount(300.0, "UAH", 700.0)
+            };
+            Assert.AreEqual(500.0, calculator.GetTotalDebt(accounts));
+        }
+
+        [TestMethod]
+        public void GetTotalDebt_Null()
+        {
+            var calculator = new AccountCalculator();
+            Assert.ThrowsException<ArgumentNullException>(() => calculator.GetTotalDebt(null!));
+        }
+
+        [TestMethod]
+        public void AllAccounts_ITransactional()
+        {
+            var accounts = new List<ITransactional>
+            {
+                new DepositAccount(100.0, "UAH", 400.0),
+                new CreditAccount(300.0, "UAH", 500.0),
+                new SavingAccount(100.0, "UAH", 10.0, 50.0)
+            };
+
+            foreach (var account in accounts)
+            {
+                string protocol = account.Deposit(10.0);
+                StringAssert.Contains(protocol, "UAH");
+            }
+        }
     }
 }

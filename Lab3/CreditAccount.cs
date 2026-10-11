@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace Lab3
 {
-    public class CreditAccount : FinancialAccount
+    public class CreditAccount : FinancialAccount, IRepayable
     {
         double creditLimit;
         public double CreditLimit

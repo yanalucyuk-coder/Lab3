@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace Lab3
 {
-    public abstract class FinancialAccount
+    public abstract class FinancialAccount : ITransactional
     {
         double balance;
         public double Balance
@@ -30,6 +30,7 @@ namespace Lab3
         }
 
         public DateTime OpenDate;
+
 
         public FinancialAccount(double balance, string currency)
         {

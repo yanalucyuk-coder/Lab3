@@ -35,14 +35,31 @@ namespace Lab3
 
                 CreditFields.Visibility = Visibility.Collapsed;
                 CreditLimitTextBox.Visibility = Visibility.Collapsed;
+
+                SavingFields.Visibility = Visibility.Collapsed;
+                MinBalanceTextBox.Visibility = Visibility.Collapsed;
             }
-            else 
+            else if(AccountTypeComboBox.SelectedIndex == 1) 
             {
                 DepositFields.Visibility = Visibility.Collapsed;
                 InterestRateTextBox.Visibility = Visibility.Collapsed;
 
                 CreditFields.Visibility = Visibility.Visible;
                 CreditLimitTextBox.Visibility = Visibility.Visible;
+
+                SavingFields.Visibility = Visibility.Collapsed;
+                MinBalanceTextBox.Visibility = Visibility.Collapsed;
+            }
+            else
+            {
+                DepositFields.Visibility = Visibility.Collapsed;
+
+                CreditFields.Visibility = Visibility.Collapsed;
+                CreditLimitTextBox.Visibility = Visibility.Collapsed;
+
+                SavingFields.Visibility = Visibility.Visible;
+                InterestRateTextBox.Visibility = Visibility.Visible;
+                MinBalanceTextBox.Visibility = Visibility.Visible;
             }
         }
 
@@ -74,7 +91,7 @@ namespace Lab3
                     }
                     account = new DepositAccount(balance, currency, rate);
                 }
-                else
+                else if (AccountTypeComboBox.SelectedIndex == 1)
                 {
                     if (!double.TryParse(CreditLimitTextBox.Text, out double limit))
                     {
@@ -82,6 +99,20 @@ namespace Lab3
                         return;
                     }
                     account = new CreditAccount(balance, currency, limit);
+                }
+                else 
+                {
+                    if (!double.TryParse(InterestRateTextBox.Text, out double rate))
+                    {
+                        MessageBox.Show("Будь ласка, введіть коректну відсоткову ставку.", "Помилка введення", MessageBoxButton.OK, MessageBoxImage.Error);
+                        return;
+                    }
+                    if (!double.TryParse(MinBalanceTextBox.Text, out double minBalance))
+                    {
+                        MessageBox.Show("Будь ласка, введіть коректний мінімальний залишок.", "Помилка введення", MessageBoxButton.OK, MessageBoxImage.Error);
+                        return;
+                    }
+                    account = new SavingAccount(balance, currency, rate, minBalance);
                 }
 
                 _accounts.Add(account);
@@ -174,21 +205,53 @@ namespace Lab3
                 FinancialAccount? account = GetSelectedAccount();
                 if (account == null) return;
 
-                if (account is DepositAccount deposit)
+                if (account is not IInterestBearing interestAccount)
                 {
-                    if (!int.TryParse(MonthsTextBox.Text, out int months))
-                    {
-                        MessageBox.Show("Будь ласка, введіть коректну кількість місяців.", "Помилка введення", MessageBoxButton.OK, MessageBoxImage.Error);
-                        return;
-                    }
-                    double interest = deposit.CalculateInterest(months);
-                    MessageBox.Show($"Відсотки за {months} міс.: {interest:N2} {deposit.Currency}", "Розрахунок відсотків", MessageBoxButton.OK, MessageBoxImage.Information);
+                    MessageBox.Show("Розрахунок відсотків недоступний для цього типу рахунку.", "Неможливо виконати", MessageBoxButton.OK, MessageBoxImage.Warning);
+                    return;
                 }
-                else if (account is CreditAccount credit)
+
+                if (!int.TryParse(MonthsTextBox.Text, out int months) || months <= 0)
                 {
-                    double repayment = credit.CalculateRepayment();
-                    MessageBox.Show($"Сума погашення: {repayment:N2} {credit.Currency}", "Розрахунок погашення", MessageBoxButton.OK, MessageBoxImage.Information);
+                    MessageBox.Show("Введіть кількість місяців: ціле число більше нуля.","Помилка введення", MessageBoxButton.OK, MessageBoxImage.Error);
+                    return;
                 }
+
+                double interest = interestAccount.CalculateInterest(months);
+                MessageBox.Show($"Відсотки за {months} міс.: {interest:N2} {account.Currency}","Розрахунок відсотків", MessageBoxButton.OK, MessageBoxImage.Information);
+            }
+            catch (ArgumentException ex)
+            {
+                MessageBox.Show(ex.Message, "Помилка валідації", MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show("Сталася неочікувана помилка: " + ex.Message, "Помилка", MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+        }
+
+        private void RepaymentButton_Click(object sender, RoutedEventArgs e)
+        {
+            try
+            {
+                FinancialAccount? account = GetSelectedAccount();
+                if (account == null) return;
+
+                if (account is not IRepayable repayable)
+                {
+                    MessageBox.Show("Сума погашення розраховується лише для кредитного рахунку.", "Неможливо виконати", MessageBoxButton.OK, MessageBoxImage.Warning);
+                    return;
+                }
+
+
+                double repayment = repayable.CalculateRepayment();
+                if (repayment == 0)
+                {
+                    MessageBox.Show("Боргу немає, погашення не потрібне.","Розрахунок погашення", MessageBoxButton.OK, MessageBoxImage.Information);
+                    return;
+                }
+
+                MessageBox.Show($"Сума погашення: {repayment:N2} {account.Currency}","Розрахунок погашення", MessageBoxButton.OK, MessageBoxImage.Information);
             }
             catch (ArgumentException ex)
             {
@@ -224,6 +287,11 @@ namespace Lab3
                 type = "Кредитний";
                 extra = $"Ліміт: {credit.CreditLimit:N2}";
             }
+            else if (account is SavingAccount saving)
+            {
+                type = "Накопичувальний";
+                extra = $"Ставка: {saving.InterestRate}% | Мін. залишок: {saving.MinBalance:N2}";
+            }
             else
             {
                 type = "Рахунок";
@@ -244,11 +312,31 @@ namespace Lab3
             if (_accounts.Count == 0)
             {
                 MaxBalanceTextBlock.Text = "0.00";
+                TotalInterestTextBlock.Text = "0.00";
+                TotalDebtTextBlock.Text = "0.00";
                 return;
             }
 
             FinancialAccount best = _calculator.GetAccountWithMaxBalance(_accounts);
             MaxBalanceTextBlock.Text = $"{best.Balance:N2} {best.Currency} ({best.OpenDate:dd.MM.yyyy HH:mm})";
+
+            // Збираємо рахунки за інтерфейсами
+            var interestAccounts = new List<IInterestBearing>();
+            var repayableAccounts = new List<IRepayable>();
+            for (int i = 0; i < _accounts.Count; i++)
+            {
+                if (_accounts[i] is IInterestBearing interest)
+                {
+                    interestAccounts.Add(interest);
+                }
+                if (_accounts[i] is IRepayable repayable)
+                {
+                    repayableAccounts.Add(repayable);
+                }
+            }
+
+            TotalInterestTextBlock.Text = $"{_calculator.GetTotalInterest(interestAccounts, 12):N2}";
+            TotalDebtTextBlock.Text = $"{_calculator.GetTotalDebt(repayableAccounts):N2}";
         }
     }
 }

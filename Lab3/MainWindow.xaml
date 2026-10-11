@@ -4,7 +4,7 @@
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"        xmlns:local="crl-namespace:Lab3"
         mc:Ignorable="d"
-        Title="Фінансові рахунки" Height="650" Width="800" Foreground="#FF252D35" Background="#A7C2FF" FontFamily="Cascadia Code">
+        Title="Фінансові рахунки" Height="760" Width="800" MinHeight="700"  Foreground="#FF252D35" Background="#A7C2FF" FontFamily="Cascadia Code">
     <Window.Resources>
         <Style TargetType="Button">
             <Setter Property="Background" Value="#AB9DE3"/>
@@ -22,10 +22,15 @@
             <Setter Property="Margin" Value="0,3,0,3"/>
             <Setter Property="BorderBrush" Value="#CCCCCC"/>
             <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="Height" Value="28"/>
+            <Setter Property="VerticalContentAlignment" Value="Center"/>
         </Style>
 
         <Style TargetType="Label">
-            <Setter Property="Margin" Value="0,5,0,0"/>
+            <Setter Property="Margin" Value="0,3,15,3"/>
+            <Setter Property="Height" Value="28"/>
+            <Setter Property="Padding" Value="5,0,5,0"/>
+            <Setter Property="VerticalContentAlignment" Value="Center"/>
             <Setter Property="FontWeight" Value="SemiBold"/>
         </Style>
 
@@ -66,6 +71,7 @@
                 <ComboBox x:Name="AccountTypeComboBox" Width="200" HorizontalAlignment="Left" SelectionChanged="AccountTypeComboBox_SelectionChanged">
                     <ComboBoxItem Content="Депозитний"/>
                     <ComboBoxItem Content="Кредитний"/>
+                    <ComboBoxItem Content="Накопичувальний"/>
                 </ComboBox>
 
                 <Grid Margin="0,10,0,0">
@@ -85,13 +91,20 @@
                         <Label Content="Валюта:"/>
                         <Label Content="Кредитний ліміт:"/>
                     </StackPanel>
+                    
+                    <StackPanel x:Name="SavingFields" Grid.Column="0" Visibility="Collapsed">
+                        <Label Content="Баланс:"/>
+                        <Label Content="Валюта:"/>
+                        <Label Content="Відсоткова ставка:"/>
+                        <Label Content="Мін. залишок:"/>
+                    </StackPanel>
 
                     <StackPanel Grid.Column="1">
                         <TextBox x:Name="BalanceTextBox" Margin="0,3,0,3"/>
                         <TextBox x:Name="CurrencyTextBox" Margin="0,3,0,3"/>
                         <TextBox x:Name="InterestRateTextBox" Margin="0,3,0,3"/>
                         <TextBox x:Name="CreditLimitTextBox" Margin="0,3,0,3" Visibility="Collapsed"/>
-
+                        <TextBox x:Name="MinBalanceTextBox" Margin="0,3,0,3" Visibility="Collapsed"/>
                     </StackPanel>
                 </Grid>
 
@@ -108,15 +121,16 @@
 
                 <ListBox x:Name="AccountsListBox" Grid.Row="0"/>
 
-                <StackPanel Grid.Row="1" Orientation="Horizontal" Margin="0,10,0,0">
-                    <Label Content="Сума:"/>
-                    <TextBox x:Name="AmountTextBox" Width="100" Margin="0,3,15,3"/>
-                    <Label Content="Місяців:"/>
-                    <TextBox x:Name="MonthsTextBox" Width="50" Margin="0,3,15,3"/>
-                    <Button x:Name="DepositButton" Content="Поповнити" Margin="0,0,10,0" Padding="10,5" Click="DepositButton_Click"/>
-                    <Button x:Name="WithdrawButton" Content="Зняти кошти" Margin="0,0,10,0" Padding="10,5" Click="WithdrawButton_Click"/>
-                    <Button x:Name="CalculateButton" Content="Розрахувати" Margin="0,0,0,0" Padding="10,5" Click="CalculateButton_Click"/>
-                </StackPanel>
+                <WrapPanel Grid.Row="1" Orientation="Horizontal" Margin="0,10,0,0">
+                    <Label Content="Сума:" VerticalAlignment="Center"/>
+                    <TextBox x:Name="AmountTextBox" Width="100" Margin="0,3,15,3" VerticalAlignment="Center"/>
+                    <Label Content="Місяців:" VerticalAlignment="Center"/>
+                    <TextBox x:Name="MonthsTextBox" Width="50" Margin="0,3,15,3" VerticalAlignment="Center"/>
+                    <Button x:Name="DepositButton" Content="Поповнити" Margin="0,3,10,3" VerticalAlignment="Center" Click="DepositButton_Click"/>
+                    <Button x:Name="WithdrawButton" Content="Зняти кошти" Margin="0,3,60,3" VerticalAlignment="Center" Click="WithdrawButton_Click"/>
+                    <Button x:Name="CalculateButton" Content="Розрахувати відсотки" Margin="0,3,10,3" VerticalAlignment="Center" Click="CalculateButton_Click"/>
+                    <Button x:Name="RepaymentButton" Content="Розрахувати суму погашення" Margin="0,3,10,3" VerticalAlignment="Center" Click="RepaymentButton_Click"/>
+                </WrapPanel>
             </Grid>
         </GroupBox>
 
@@ -124,6 +138,10 @@
             <StackPanel Orientation="Horizontal" Margin="5" HorizontalAlignment="Center">
                 <TextBlock Text="Макс. баланс: " FontWeight="Bold"/>
                 <TextBlock x:Name="MaxBalanceTextBlock" Text="0.00"/>
+                <TextBlock Text="; Відсотки за рік: " FontWeight="Bold"/>
+                <TextBlock x:Name="TotalInterestTextBlock" Text="0.00"/>
+                <TextBlock Text="; Загальний борг: " FontWeight="Bold"/>
+                <TextBlock x:Name="TotalDebtTextBlock" Text="0.00"/>
             </StackPanel>
         </GroupBox>
 

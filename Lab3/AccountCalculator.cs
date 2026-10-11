@@ -37,5 +37,34 @@ namespace Lab3
             return GetAccountWithMaxBalance(accounts).Balance;
         }
 
+        public double GetTotalInterest(IEnumerable<IInterestBearing> accounts, int months)
+        {
+            if (accounts == null)
+            {
+                throw new ArgumentNullException(nameof(accounts), "Список рахунків не передано!");
+            }
+            double total = 0;
+            foreach (IInterestBearing account in accounts)
+            {
+                total += account.CalculateInterest(months);
+            }
+            return total;
+
+        }
+
+        public double GetTotalDebt(IEnumerable<IRepayable> accounts)
+        {
+            if(accounts == null)
+            {
+                throw new ArgumentNullException(nameof(accounts), "Список рахунків не передано!");
+            }
+            double total = 0;
+            foreach (IRepayable account in accounts)
+            {
+                total += account.CalculateRepayment();
+            }
+            return total;
+        }
+
     }
 }

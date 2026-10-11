@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace Lab3
 {
-    public class DepositAccount : FinancialAccount
+    public class DepositAccount : FinancialAccount, IInterestBearing
     {
         double interestRate;
         public double InterestRate
